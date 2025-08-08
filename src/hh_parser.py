@@ -1,11 +1,14 @@
+import time
+
 import requests
 
 
 class HHParser:
 
     def get_employers(self):
+        """Получает данные о работодателях с сайта hh.ru"""
         params = {"sort_by": "by_vacancies_open", "per_page": 10}
-        response = requests.get("https://api.hh.ru/employers", params=params)
+        response = requests.get("https://api.hh.ru/employers", params=params, timeout=10)
         response.raise_for_status()
         data = response.json()["items"]
         employers = []
@@ -16,11 +19,13 @@ class HHParser:
         return employers
 
     def get_vacancies_by_employer_id(self, employer_id):
+        """Получает данные о вакансиях с сайта hh.ru"""
         vacancies = []
+        page = 0
 
         while True:
-            params = {"employer_id": employer_id, "per_page": 50}
-            response = requests.get("https://api.hh.ru/vacancies", params=params)
+            params = {"employer_id": employer_id, "per_page": 50, "page": page}
+            response = requests.get("https://api.hh.ru/vacancies", params=params, timeout=10)
             response.raise_for_status()
             data = response.json()
 
@@ -44,4 +49,10 @@ class HHParser:
                     }
                 )
 
-            return vacancies
+            # Проверяем, есть ли следующая страница
+            if page >= data["pages"] - 1:
+                break
+            page += 1
+            time.sleep(0.3)
+
+        return vacancies

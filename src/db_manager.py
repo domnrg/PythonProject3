@@ -3,7 +3,7 @@ import psycopg2
 from config import config
 
 
-class DBManager():
+class DBManager:
     def __init__(self, db_name):
         self.__db_name = db_name
 
@@ -28,11 +28,10 @@ class DBManager():
     """
         return self.__execute_query(query)
 
-
     def get_all_vacancies(self):
-        """Получает список всех вакансий с указанием названия компании, названия вакансии и зарплаты и ссылки на вакансию"""
+        """Получает список всех вакансий с указанием названия компании, вакансии и зарплаты и ссылки на вакансию"""
         query = """
-            SELECT employers.name AS company_name, 
+            SELECT employers.name AS company_name,
                    vacancies.name AS vacancy_name,
                    vacancies.salary_from,
                    vacancies.salary_to,
@@ -41,7 +40,6 @@ class DBManager():
             JOIN employers ON vacancies.employer_id = employers.id
         """
         return self.__execute_query(query)
-
 
     def get_avg_salary(self):
         """Получает среднюю зарплату по вакансиям"""

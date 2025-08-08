@@ -6,6 +6,7 @@ from src.hh_parser import HHParser
 
 
 def create_database(db_name):
+    """Создает базу данных"""
     params = config()
     conn = psycopg2.connect(dbname="postgres", **params)
     conn.autocommit = True
@@ -19,14 +20,19 @@ def create_database(db_name):
 
 
 def create_tables(db_name):
+    """Создает таблицы работодателей и вакансий"""
     params = config()
     with psycopg2.connect(dbname=db_name, **params) as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "CREATE TABLE IF NOT EXISTS employers (" "id VARCHAR PRIMARY KEY," "name VARCHAR(255) NOT NULL," "open_vacancies INT)"
+                "CREATE TABLE IF NOT EXISTS employers ("
+                "id VARCHAR PRIMARY KEY,"
+                "name VARCHAR(255) NOT NULL,"
+                "open_vacancies INT)"
             )
 
-            cur.execute("""
+            cur.execute(
+                """
                 CREATE TABLE IF NOT EXISTS vacancies (
                     id VARCHAR PRIMARY KEY,
                     name TEXT NOT NULL,
@@ -38,11 +44,13 @@ def create_tables(db_name):
                     experience TEXT,
                     employer_id VARCHAR REFERENCES employers(id)
                 )
-            """)
+            """
+            )
     conn.close()
 
 
 def insert_employers(db_name):
+    """Заполняет созданные таблицы данными о работодателях"""
     hh_parser = HHParser()
     employers = hh_parser.get_employers()
     params = config()
@@ -57,6 +65,7 @@ def insert_employers(db_name):
 
 
 def insert_vacancies(db_name):
+    """Заполняет созданные таблицы данными о вакансиях"""
     hh_parser = HHParser()
     employers = hh_parser.get_employers()
     params = config()
@@ -67,12 +76,11 @@ def insert_vacancies(db_name):
                 for employer in employers:
                     try:
                         vacancies = hh_parser.get_vacancies_by_employer_id(employer["id"])
-                        print(f"{employer['name']}: найдено вакансий — {len(vacancies)}")
                         for vacancy in vacancies:
                             try:
                                 cur.execute(
                                     """
-                                    INSERT INTO vacancies 
+                                    INSERT INTO vacancies
                                     (id, name, salary_from, salary_to, url, area, published_at, experience, employer_id)
                                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                                     ON CONFLICT (id) DO NOTHING
@@ -96,5 +104,3 @@ def insert_vacancies(db_name):
                         print(f"Ошибка при получении вакансий работодателя {employer['id']}: {e}")
     except Exception as conn_err:
         print(f"Ошибка при подключении к БД: {conn_err}")
-
-
